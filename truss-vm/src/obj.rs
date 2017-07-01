@@ -18,7 +18,7 @@ pub struct VmFieldDef {
 
 impl VmFieldDef {
 
-    fn new(name: &str, ft: VmType) -> VmFieldDef {
+    pub fn new(name: &str, ft: VmType) -> VmFieldDef {
         VmFieldDef {
             name: String::from(name),
             field_type: ft,
@@ -58,10 +58,6 @@ impl VmClass {
 
     }
 
-}
-
-pub struct HeapObject {
-    obj_type: VmClass
 }
 
 pub mod test {
