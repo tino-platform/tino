@@ -2,6 +2,8 @@ use std::boxed::Box;
 use std::cell::Cell;
 use std::rc::Rc;
 
+use classload::{ClassPool, DummySource};
+
 use obj::VmClass;
 
 pub struct HeapObject {
@@ -45,5 +47,6 @@ pub enum HeapEntry {
 
 pub struct Process {
     name: String,
+    classpool: ClassPool<DummySource>,
     heap: Vec<Cell<HeapObject>>
 }

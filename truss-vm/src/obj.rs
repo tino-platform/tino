@@ -1,16 +1,15 @@
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
+
+use classload::ClassIdentifier;
 
 #[derive(Clone)]
 pub enum VmType {
     Object(Rc<VmClass>), // FIXME This can't be a Box.
-    Str,
-    Uint64,
-    Int64,
-    Uint32,
-    Int32,
-    Uint16,
-    Int16,
-    Byte
+    Dynamic,
+    Integer,
+    Byte,
+    Boolean
 }
 
 #[derive(Clone)]
@@ -34,13 +33,22 @@ impl VmFieldDef {
 
 #[derive(Clone)]
 pub struct VmClass {
-    parent: Option<Rc<VmClass>>,
-    package: String,
     name: String,
+    package: String,
+    parent: Option<Rc<VmClass>>,
     local_fields: Vec<VmFieldDef>
 }
 
 impl VmClass {
+
+    pub fn new_dummy(id: ClassIdentifier) -> VmClass {
+        VmClass {
+            name: id.name.clone(),
+            package: id.package.clone(),
+            parent: None,
+            local_fields: vec![]
+        }
+    }
 
     pub fn get_ancestor_fields(&self) -> Vec<&VmFieldDef> {
 
@@ -61,6 +69,18 @@ impl VmClass {
 
         fields
 
+    }
+
+    pub fn to_identifier(&self) -> ClassIdentifier {
+        ClassIdentifier::new(self.name.clone(), self.package.clone())
+    }
+
+}
+
+impl Hash for VmClass {
+
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.to_identifier().hash(state);
     }
 
 }
