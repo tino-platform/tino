@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 use std::rc::Rc;
 
 use obj::VmClass;
@@ -24,13 +24,13 @@ impl HeapObject {
 }
 
 #[allow(non_camel_case_types)]
-type uindex = u64; // Used for indexing objects in heap vectors.
+type hindex = u64; // Used for indexing objects in heap vectors.
 
 // TODO All of these are much wider than they actually need to be.
 #[derive(Copy, Clone)]
 pub enum HeapValue {
-    Object(uindex),
-    Dynamic(uindex),
+    Object(hindex),
+    Dynamic(hindex),
     Integer(i64),
     Byte(u8),
     Boolean(bool),

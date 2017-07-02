@@ -1,5 +1,8 @@
+use std::rc::Rc;
+
+#[derive(Clone)]
 pub enum VmType {
-    Object(Box<VmClass>),
+    Object(Rc<VmClass>), // FIXME This can't be a Box.
     Str,
     Uint64,
     Int64,
@@ -10,6 +13,7 @@ pub enum VmType {
     Byte
 }
 
+#[derive(Clone)]
 pub struct VmFieldDef {
     name: String,
     field_type: VmType,
@@ -28,8 +32,9 @@ impl VmFieldDef {
 
 }
 
+#[derive(Clone)]
 pub struct VmClass {
-    parent: Option<Box<VmClass>>,
+    parent: Option<Rc<VmClass>>,
     package: String,
     name: String,
     local_fields: Vec<VmFieldDef>
@@ -58,24 +63,4 @@ impl VmClass {
 
     }
 
-}
-
-pub mod test {
-
-    use obj::*;
-
-    #[test]
-    pub fn test() {
-
-        let clazz = VmClass {
-            parent: None,
-            package: String::from("foo.bar"),
-            name: String::from("balls"),
-            local_fields: vec![VmFieldDef::new("alice", VmType::Byte)]
-        };
-
-        let fields = clazz.get_ancestor_fields();
-        println!("clazz {} has {} fields", clazz.name, fields.len());
-
-    }
 }
