@@ -21,15 +21,15 @@ pub trait ClassSource {
     fn load_class(&self, id: ClassIdentifier) -> Result<VmClass, ()>;
 }
 
-pub struct ClassPool<S: ClassSource> {
+pub struct ClassPool {
     pool: RefCell<HashMap<ClassIdentifier, Weak<VmClass>>>,
-    loader: Arc<S>
+    loader: Arc<Box<ClassSource>>
 }
 
-impl<S: ClassSource> ClassPool<S> {
+impl ClassPool {
 
-    pub fn new(src: Arc<S>) -> ClassPool<S> {
-        ClassPool { pool: RefCell::new(HashMap::new()), loader: src.clone() }
+    pub fn new(src: Arc<Box<ClassSource>>) -> ClassPool {
+        ClassPool { pool: RefCell::new(HashMap::new()), loader: src }
     }
 
     pub fn find_class(&mut self, id: ClassIdentifier) -> Result<Rc<VmClass>, ()> {
@@ -60,12 +60,4 @@ impl<S: ClassSource> ClassPool<S> {
 
     }
 
-}
-
-pub struct DummySource;
-
-impl ClassSource for DummySource {
-    fn load_class(&self, id: ClassIdentifier) -> Result<VmClass, ()> {
-        Ok(VmClass::new_dummy(id)) // FIXME Make this do something logical.
-    }
 }
