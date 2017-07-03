@@ -1,5 +1,6 @@
 use process::{HeapValue, Process};
 
+#[derive(Clone)]
 pub enum Instruction {
     Nop,
     PushLiteral(HeapValue),

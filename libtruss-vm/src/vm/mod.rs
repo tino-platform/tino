@@ -1,2 +1,2 @@
-pub mod exec;
+pub mod func;
 pub mod isn;

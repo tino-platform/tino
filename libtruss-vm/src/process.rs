@@ -5,6 +5,8 @@ use classload::{ClassPool, DummySource};
 
 use obj::VmClass;
 
+use vm::func::CallStack;
+
 pub struct HeapObject {
     obj_type: Box<VmClass>,
     fields: Vec<Cell<HeapValue>>
@@ -72,5 +74,6 @@ pub struct Process {
     pub name: String,
     classpool: ClassPool<DummySource>,
     pub heap: Vec<Cell<HeapObject>>,
-    pub stack: Vec<StackValue>
+    pub stack: Vec<StackValue>,
+    call_stack: CallStack
 }
