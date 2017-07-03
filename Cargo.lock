@@ -1,4 +1,4 @@
 [root]
-name = "truss-vm"
+name = "libtruss-vm"
 version = "0.1.0"
 
