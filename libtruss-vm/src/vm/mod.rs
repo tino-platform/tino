@@ -15,27 +15,25 @@ impl Instruction {
             &Instruction::Nop => Ok(()), // Always succeeds
 
             &Instruction::PushLiteral(v) => {
-                p.stack.borrow_mut().push(v);
+                p.stack.push(v);
                 Ok(())
             },
 
-            &Instruction::Pop => match p.stack.borrow_mut().pop() {
+            &Instruction::Pop => match p.stack.pop() {
                 Some(_) => Ok(()),
                 None => Err("stack empty")
             },
 
             &Instruction::Dup => {
 
-                let mut stack = p.stack.borrow_mut();
-
-                let top = match stack.len() {
+                let top = match p.stack.len() {
                     0 => None,
-                    n => Some(stack[n - 1])
+                    n => Some(p.stack[n - 1])
                 };
 
                 match top {
                     Some(v) => {
-                        stack.push(v);
+                        p.stack.push(v);
                         Ok(())
                     },
                     None => Err("stack is empty")
@@ -45,15 +43,13 @@ impl Instruction {
 
             &Instruction::Xchg => {
 
-                let mut stack = p.stack.borrow_mut();
+                if p.stack.len() >= 2 {
 
-                if stack.len() >= 2 {
+                    let a = p.stack.pop().unwrap();
+                    let b = p.stack.pop().unwrap();
 
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-
-                    stack.push(a);
-                    stack.push(b);
+                    p.stack.push(a);
+                    p.stack.push(b);
 
                     Ok(())
 

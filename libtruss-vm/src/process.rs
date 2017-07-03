@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 
 use classload::{ClassPool, DummySource};
 
@@ -72,5 +72,5 @@ pub struct Process {
     pub name: String,
     classpool: ClassPool<DummySource>,
     pub heap: Vec<Cell<HeapObject>>,
-    pub stack: RefCell<Vec<StackValue>>
+    pub stack: Vec<StackValue>
 }
