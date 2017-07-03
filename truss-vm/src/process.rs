@@ -1,6 +1,5 @@
 use std::boxed::Box;
 use std::cell::Cell;
-use std::rc::Rc;
 
 use classload::{ClassPool, DummySource};
 
@@ -21,6 +20,27 @@ impl HeapObject {
             fields: vec![Cell::new(HeapValue::Empty); cnt]
         }
 
+    }
+
+    pub fn get_field(&self, name: String) -> Option<HeapValue> {
+
+        let fields = self.obj_type.get_ancestor_fields();
+        for i in 0..fields.len() {
+            if fields[i].name == name {
+                return self.get_field_index(i)
+            }
+        }
+
+        return None
+
+    }
+
+    pub fn get_field_index(&self, idx: usize) -> Option<HeapValue> {
+        if idx < self.fields.len() {
+            Some(self.fields[idx].get())
+        } else {
+            None
+        }
     }
 
 }
@@ -45,6 +65,7 @@ pub enum HeapEntry {
     Empty
 }
 
+#[allow(dead_code)]
 pub struct Process {
     name: String,
     classpool: ClassPool<DummySource>,

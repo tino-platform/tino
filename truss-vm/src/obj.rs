@@ -5,7 +5,7 @@ use classload::ClassIdentifier;
 
 #[derive(Clone)]
 pub enum VmType {
-    Object(Rc<VmClass>), // FIXME This can't be a Box.
+    Object(Rc<VmClass>),
     Dynamic,
     Integer,
     Byte,
@@ -13,10 +13,10 @@ pub enum VmType {
 }
 
 #[derive(Clone)]
-pub struct VmFieldDef {
-    name: String,
-    field_type: VmType,
-    flags: u32
+pub struct VmFieldDef { // Is it bad to have all these fields pub?
+    pub name: String,
+    pub field_type: VmType,
+    pub flags: u32
 }
 
 impl VmFieldDef {
