@@ -1,5 +1,5 @@
-use std::boxed::Box;
 use std::cell::Cell;
+use std::rc::Rc;
 
 use classload::{ClassPool, DummySource};
 
@@ -8,13 +8,13 @@ use obj::VmClass;
 use vm::func::CallStack;
 
 pub struct HeapObject {
-    obj_type: Box<VmClass>,
+    obj_type: Rc<VmClass>,
     fields: Vec<Cell<HeapValue>>
 }
 
 impl HeapObject {
 
-    pub fn new(clazz: Box<VmClass>) -> HeapObject {
+    pub fn new(clazz: Rc<VmClass>) -> HeapObject {
 
         let cnt = clazz.get_ancestor_fields().len();
         HeapObject {
