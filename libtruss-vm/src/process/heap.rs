@@ -1,11 +1,7 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use classload::{ClassPool, DummySource};
-
 use obj::VmClass;
-
-use vm::func::CallStack;
 
 pub struct HeapObject {
     obj_type: Rc<VmClass>,
@@ -68,12 +64,3 @@ pub enum HeapEntry {
 }
 
 pub type StackValue = HeapValue; // TODO Figure this out.
-
-#[allow(dead_code)]
-pub struct Process {
-    pub name: String,
-    classpool: ClassPool<DummySource>,
-    pub heap: Vec<Cell<HeapObject>>,
-    pub stack: Vec<StackValue>,
-    call_stack: CallStack
-}

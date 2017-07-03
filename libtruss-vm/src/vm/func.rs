@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 use classload::ClassIdentifier;
-
 use vm::isn::Instruction;
 
 #[derive(Clone)]

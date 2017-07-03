@@ -1,9 +1,10 @@
-use process::{HeapValue, Process};
+use process::Process;
+use process::heap::StackValue;
 
 #[derive(Clone)]
 pub enum Instruction {
     Nop,
-    PushLiteral(HeapValue),
+    PushLiteral(StackValue),
     Pop,
     Dup,
     Xchg
