@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 use classload::{ClassPool, DummySource};
 
@@ -65,9 +65,12 @@ pub enum HeapEntry {
     Empty
 }
 
+pub type StackValue = HeapValue; // TODO Figure this out.
+
 #[allow(dead_code)]
 pub struct Process {
-    name: String,
+    pub name: String,
     classpool: ClassPool<DummySource>,
-    heap: Vec<Cell<HeapObject>>
+    pub heap: Vec<Cell<HeapObject>>,
+    pub stack: RefCell<Vec<StackValue>>
 }
