@@ -13,7 +13,9 @@ pub enum Instruction {
     LogicalAnd,
     LogicalOr,
     LogicalXor,
-    LogicalNot
+    LogicalNot,
+    RelativeJump(i16),
+    CondExec
 }
 
 pub enum IsnSegue {
@@ -184,6 +186,25 @@ impl Instruction {
                         }
                     },
                     _ => Err("stack empty")
+                }
+
+            },
+
+            &Instruction::RelativeJump(d) => Ok(RelJump(d)),
+
+            &Instruction::CondExec => {
+
+                let top = p.stack.pop();
+
+                match top {
+                    Some(v) => match v {
+                        Boolean(b) => Ok(if b { Next } else { RelJump(2) }),
+                        _ => {
+                            p.stack.push(v);
+                            Err("not a boolean")
+                        }
+                    },
+                    None => Err("stack empty")
                 }
 
             }
