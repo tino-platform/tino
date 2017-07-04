@@ -1,6 +1,5 @@
 use process::Process;
 use process::heap::StackValue;
-use process::heap::HeapValue::*;
 
 #[derive(Clone)]
 pub enum Instruction {
@@ -17,19 +16,28 @@ pub enum Instruction {
     LogicalNot
 }
 
+pub enum IsnSegue {
+    Next,
+    RelJump(i16)
+}
+
 impl Instruction {
-    pub fn execute(&self, p: &mut Process) -> Result<(), &str> {
+    pub fn execute(&self, p: &mut Process) -> Result<IsnSegue, &str> {
+
+        use process::heap::HeapValue::*;
+        use self::IsnSegue::*;
+
         match self {
 
-            &Instruction::Nop => Ok(()), // Always succeeds
+            &Instruction::Nop => Ok(Next), // Always succeeds
 
             &Instruction::PushLiteral(v) => {
                 p.stack.push(v);
-                Ok(())
+                Ok(Next)
             },
 
             &Instruction::Pop => match p.stack.pop() {
-                Some(_) => Ok(()),
+                Some(_) => Ok(Next),
                 None => Err("stack empty")
             },
 
@@ -43,7 +51,7 @@ impl Instruction {
                 match top {
                     Some(v) => {
                         p.stack.push(v);
-                        Ok(())
+                        Ok(Next)
                     },
                     None => Err("stack is empty")
                 }
@@ -60,7 +68,7 @@ impl Instruction {
                     p.stack.push(a);
                     p.stack.push(b);
 
-                    Ok(())
+                    Ok(Next)
 
                 } else {
                     Err("not enough elements on stack")
@@ -80,22 +88,22 @@ impl Instruction {
 
                             (Integer(x), Integer(y)) => {
                                 p.stack.push(Integer(x + y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Integer(x), Byte(y)) => {
                                 p.stack.push(Integer(x + y as i64));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Byte(x), Integer(y)) => {
                                 p.stack.push(Integer(x as i64 + y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Byte(x), Byte(y)) => {
                                 p.stack.push(Byte(x + y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             _ => Err("incompatible stack item types")
@@ -124,22 +132,22 @@ impl Instruction {
 
                             (Integer(x), Integer(y)) => {
                                 p.stack.push(Integer(x * y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Integer(x), Byte(y)) => {
                                 p.stack.push(Integer(x * y as i64));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Byte(x), Integer(y)) => {
                                 p.stack.push(Integer(x as i64 * y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             (Byte(x), Byte(y)) => {
                                 p.stack.push(Byte(x * y));
-                                Ok(())
+                                Ok(Next)
                             },
 
                             _ => Err("incompatible stack item types")
@@ -156,92 +164,9 @@ impl Instruction {
 
             }
 
-            &Instruction::LogicalAnd => {
-
-                let a = p.stack.pop();
-                let b = p.stack.pop();
-
-                match (a, b) {
-                    (Some(x), Some(y)) => {
-
-                        match (x, y) {
-
-                            (Boolean(x), Boolean(y)) => {
-                                p.stack.push(Boolean(x && y));
-                                Ok(())
-                            },
-
-                            _ => Err("incompatible stack item types")
-
-                        }
-
-                    },
-                    (Some(x), None) => {
-                        p.stack.push(x);
-                        Err("stack empty")
-                    },
-                    _ => Err("stack empty")
-                }
-
-            }
-
-            &Instruction::LogicalOr => {
-
-                let a = p.stack.pop();
-                let b = p.stack.pop();
-
-                match (a, b) {
-                    (Some(x), Some(y)) => {
-
-                        match (x, y) {
-
-                            (Boolean(x), Boolean(y)) => {
-                                p.stack.push(Boolean(x || y));
-                                Ok(())
-                            },
-
-                            _ => Err("incompatible stack item types")
-
-                        }
-
-                    },
-                    (Some(x), None) => {
-                        p.stack.push(x);
-                        Err("stack empty")
-                    },
-                    _ => Err("stack empty")
-                }
-
-            }
-
-            &Instruction::LogicalXor => {
-
-                let a = p.stack.pop();
-                let b = p.stack.pop();
-
-                match (a, b) {
-                    (Some(x), Some(y)) => {
-
-                        match (x, y) {
-
-                            (Boolean(x), Boolean(y)) => {
-                                p.stack.push(Boolean(x ^ y));
-                                Ok(())
-                            },
-
-                            _ => Err("incompatible stack item types")
-
-                        }
-
-                    },
-                    (Some(x), None) => {
-                        p.stack.push(x);
-                        Err("stack empty")
-                    },
-                    _ => Err("stack empty")
-                }
-
-            }
+            &Instruction::LogicalAnd => helper_boolean_op(p, &|a, b| a && b),
+            &Instruction::LogicalOr => helper_boolean_op(p, &|a, b| a || b),
+            &Instruction::LogicalXor => helper_boolean_op(p, &|a, b| a ^ b),
 
             &Instruction::LogicalNot => {
 
@@ -251,7 +176,7 @@ impl Instruction {
                     Some(v) => match v {
                         Boolean(x) => {
                             p.stack.push(Boolean(!x));
-                            Ok(())
+                            Ok(Next)
                         },
                         _ => {
                             p.stack.push(v);
@@ -265,4 +190,36 @@ impl Instruction {
 
         }
     }
+}
+
+fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<IsnSegue, &'static str> {
+
+    use process::heap::HeapValue::*;
+    use self::IsnSegue::*;
+
+    let a = p.stack.pop();
+    let b = p.stack.pop();
+
+    match (a, b) {
+        (Some(x), Some(y)) => {
+
+            match (x, y) {
+
+                (Boolean(x), Boolean(y)) => {
+                    p.stack.push(Boolean(exp(x, y)));
+                    Ok(Next)
+                },
+
+                _ => Err("incompatible stack item types")
+
+            }
+
+        },
+        (Some(x), None) => {
+            p.stack.push(x);
+            Err("stack empty")
+        },
+        _ => Err("stack empty")
+    }
+
 }
