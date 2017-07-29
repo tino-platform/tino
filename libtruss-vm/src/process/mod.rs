@@ -12,5 +12,5 @@ pub struct Process {
     classpool: ClassPool,
     pub heap: Vec<Cell<HeapObject>>,
     pub stack: Vec<StackValue>,
-    call_stack: CallStack
+    pub call_stack: CallStack
 }

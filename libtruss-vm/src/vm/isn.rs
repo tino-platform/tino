@@ -1,10 +1,10 @@
 use process::Process;
 use process::heap::StackValue;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Instruction {
     Nop,
-    PushLiteral(StackValue),
+    //PushLiteral(StackValue),
     Pop,
     Dup,
     Xchg,
@@ -15,16 +15,20 @@ pub enum Instruction {
     LogicalXor,
     LogicalNot,
     RelativeJump(i16),
-    CondExec
+    CondExec,
+    Return,
+    Detach
 }
 
 pub enum IsnSegue {
     Next,
-    RelJump(i16)
+    RelJump(i16),
+    Return,
+    Detach
 }
 
 impl Instruction {
-    pub fn execute(&self, p: &mut Process) -> Result<IsnSegue, &str> {
+    fn execute(&self, p: &mut Process) -> Result<IsnSegue, &str> {
 
         use process::heap::HeapValue::*;
         use self::IsnSegue::*;
@@ -33,10 +37,10 @@ impl Instruction {
 
             &Instruction::Nop => Ok(Next), // Always succeeds
 
-            &Instruction::PushLiteral(v) => {
+            /*&Instruction::PushLiteral(v) => {
                 p.stack.push(v);
                 Ok(Next)
-            },
+            },*/
 
             &Instruction::Pop => match p.stack.pop() {
                 Some(_) => Ok(Next),
@@ -191,6 +195,7 @@ impl Instruction {
             },
 
             &Instruction::RelativeJump(d) => Ok(RelJump(d)),
+            &Instruction::Return => Ok(Return),
 
             &Instruction::CondExec => {
 
@@ -207,7 +212,9 @@ impl Instruction {
                     None => Err("stack empty")
                 }
 
-            }
+            },
+
+            &Instruction::Detach => Ok(Detach)
 
         }
     }
@@ -242,5 +249,54 @@ fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<Is
         },
         _ => Err("stack empty")
     }
+
+}
+
+pub fn vm_exec(p: &mut Process, isns: u64) -> Result<u64, (u64, &str)> {
+
+    // FIXME Ugly nested matches can be made into a more functional thing.
+
+    let mut execed = 0;
+
+    while execed < isns {
+
+        match p.call_stack.pop() {
+            Some(frame) => {
+                let mut f = frame.clone();
+                match f.get_target_isn() {
+                    Some(i) => match i.execute(p) {
+                        Ok(segue) => {
+                            match segue {
+                                IsnSegue::Next => {
+                                    f.next_isn += 1;
+                                    p.call_stack.push(f);
+                                    execed += 1;
+                                },
+                                IsnSegue::RelJump(diff) => {
+                                    f.next_isn = ((f.next_isn as i64) + (diff as i64)) as u64;
+                                    p.call_stack.push(f);
+                                    execed += 1;
+                                },
+                                IsnSegue::Return => execed += 1, // Don't push it back onto the stack.
+                                IsnSegue::Detach => {
+                                    f.next_isn += 1;
+                                    p.call_stack.push(f);
+                                    return Ok(execed + 1);
+                                }
+                            }
+                        },
+                        Err(r) => return Err((execed + 1, r))
+                    },
+                    None => {} // Don't push it back onto the stack and don't increment execed.
+                }
+            },
+            None => return Err((execed, "process exited"))
+        }
+
+        execed += 1;
+
+    }
+
+    return Ok(execed);
 
 }
