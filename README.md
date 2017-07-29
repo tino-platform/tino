@@ -31,11 +31,11 @@ but it's a goal in the future.
 
 (Not in order of importance.)
 
-- [*] Object, class framework
+- [x] Object, class framework
 
 - [ ] Garbage collector
 
-- [*] First-class function support
+- [x] First-class function support
 
 - [ ] Generic type support
 
