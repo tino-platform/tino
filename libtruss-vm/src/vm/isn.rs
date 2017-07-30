@@ -13,7 +13,7 @@ pub enum Instruction {
     LogicalOr,
     LogicalXor,
     LogicalNot,
-    RelativeJump(i16),
+    RelativeJump(isize),
     CondExec,
     Return,
     Detach
@@ -21,7 +21,7 @@ pub enum Instruction {
 
 pub enum IsnSegue {
     Next,
-    RelJump(i16),
+    RelJump(isize),
     Return,
     Detach
 }
@@ -260,7 +260,7 @@ pub fn vm_exec(p: &mut Process, isns: u64) -> Result<u64, (u64, VmExecError)> {
                     },
                     IsnSegue::RelJump(diff) => {
                         let mut sf = p.call_stack.pop().unwrap();
-                        sf.next_isn = ((sf.next_isn as i64) + (diff as i64)) as u64;
+                        sf.next_isn = ((sf.next_isn as isize) + diff) as usize;
                         p.call_stack.push(sf)
                     },
                     IsnSegue::Return => {

@@ -1,7 +1,5 @@
 use std::rc::Rc;
 
-use std::ops::Index;
-
 use classload::ClassIdentifier;
 use vm::isn::Instruction;
 
@@ -16,7 +14,7 @@ pub struct VmFunction {
 #[derive(Clone)]
 pub struct StackFrame {
     pub func: Rc<VmFunction>,
-    pub next_isn: u64
+    pub next_isn: usize
 }
 
 impl StackFrame {
@@ -46,8 +44,8 @@ impl CallStack {
         self.stack.last().cloned()
     }
 
-    pub fn len(&self) -> u64 {
-        self.stack.len() as u64
+    pub fn len(&self) -> usize {
+        self.stack.len()
     }
 
 }
