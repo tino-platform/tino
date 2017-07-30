@@ -20,8 +20,11 @@ pub struct StackFrame {
 }
 
 impl StackFrame {
-    pub fn get_target_isn(&self) -> Option<Instruction> {
-        self.func.isns.get(self.next_isn as usize).cloned()
+    pub fn get_target_isn(&self) -> Instruction {
+        self.func.isns
+            .get(self.next_isn as usize)
+            .cloned()
+            .unwrap_or(Instruction::Return)
     }
 }
 
@@ -39,16 +42,12 @@ impl CallStack {
         self.stack.pop()
     }
 
-    pub fn len(&self) -> u64 {
-        self.stack.len() as u64
+    pub fn top(&self) -> Option<StackFrame> {
+        self.stack.last().cloned()
     }
 
-    pub fn handle_return(&mut self) {
-        self.stack.pop();
-        match self.stack.pop() {
-            Some(mut f) => f.next_isn += 1,
-            None => {} // ???
-        }
+    pub fn len(&self) -> u64 {
+        self.stack.len() as u64
     }
 
 }

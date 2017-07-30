@@ -1,5 +1,4 @@
 use process::Process;
-use process::heap::StackValue;
 
 #[derive(Copy, Clone)]
 pub enum Instruction {
@@ -27,10 +26,17 @@ pub enum IsnSegue {
     Detach
 }
 
+#[derive(Clone, Debug)]
+pub enum ExecError {
+    StackUnderflow,
+    TypeError,
+}
+
 impl Instruction {
-    fn execute(&self, p: &mut Process) -> Result<IsnSegue, &str> {
+    fn execute(&self, p: &mut Process) -> Result<IsnSegue, ExecError> {
 
         use process::heap::HeapValue::*;
+        use self::ExecError::*;
         use self::IsnSegue::*;
 
         match self {
@@ -44,7 +50,7 @@ impl Instruction {
 
             &Instruction::Pop => match p.stack.pop() {
                 Some(_) => Ok(Next),
-                None => Err("stack empty")
+                None => Err(StackUnderflow),
             },
 
             &Instruction::Dup => {
@@ -59,7 +65,7 @@ impl Instruction {
                         p.stack.push(v);
                         Ok(Next)
                     },
-                    None => Err("stack is empty")
+                    None => Err(StackUnderflow),
                 }
 
             },
@@ -77,99 +83,13 @@ impl Instruction {
                     Ok(Next)
 
                 } else {
-                    Err("not enough elements on stack")
+                    Err(StackUnderflow)
                 }
 
             },
 
-            &Instruction::Add => {
-
-                let a = p.stack.pop();
-                let b = p.stack.pop();
-
-                match (a, b) {
-                    (Some(x), Some(y)) => {
-
-                        match (x, y) {
-
-                            (Integer(x), Integer(y)) => {
-                                p.stack.push(Integer(x + y));
-                                Ok(Next)
-                            },
-
-                            (Integer(x), Byte(y)) => {
-                                p.stack.push(Integer(x + y as i64));
-                                Ok(Next)
-                            },
-
-                            (Byte(x), Integer(y)) => {
-                                p.stack.push(Integer(x as i64 + y));
-                                Ok(Next)
-                            },
-
-                            (Byte(x), Byte(y)) => {
-                                p.stack.push(Byte(x + y));
-                                Ok(Next)
-                            },
-
-                            _ => Err("incompatible stack item types")
-
-                        }
-
-                    },
-                    (Some(x), None) => {
-                        p.stack.push(x);
-                        Err("stack empty")
-                    },
-                    _ => Err("stack empty")
-                }
-
-            }
-
-            &Instruction::Mul => {
-
-                let a = p.stack.pop();
-                let b = p.stack.pop();
-
-                match (a, b) {
-                    (Some(x), Some(y)) => {
-
-                        match (x, y) {
-
-                            (Integer(x), Integer(y)) => {
-                                p.stack.push(Integer(x * y));
-                                Ok(Next)
-                            },
-
-                            (Integer(x), Byte(y)) => {
-                                p.stack.push(Integer(x * y as i64));
-                                Ok(Next)
-                            },
-
-                            (Byte(x), Integer(y)) => {
-                                p.stack.push(Integer(x as i64 * y));
-                                Ok(Next)
-                            },
-
-                            (Byte(x), Byte(y)) => {
-                                p.stack.push(Byte(x * y));
-                                Ok(Next)
-                            },
-
-                            _ => Err("incompatible stack item types")
-
-                        }
-
-                    },
-                    (Some(x), None) => {
-                        p.stack.push(x);
-                        Err("stack empty")
-                    },
-                    _ => Err("stack empty")
-                }
-
-            }
-
+            &Instruction::Add => helper_intbyte_op(p, &|a, b| a + b, &|a, b| a + b),
+            &Instruction::Mul => helper_intbyte_op(p, &|a, b| a * b, &|a, b| a * b),
             &Instruction::LogicalAnd => helper_boolean_op(p, &|a, b| a && b),
             &Instruction::LogicalOr => helper_boolean_op(p, &|a, b| a || b),
             &Instruction::LogicalXor => helper_boolean_op(p, &|a, b| a ^ b),
@@ -186,10 +106,10 @@ impl Instruction {
                         },
                         _ => {
                             p.stack.push(v);
-                            Err("not a boolean")
+                            Err(TypeError)
                         }
                     },
-                    _ => Err("stack empty")
+                    _ => Err(StackUnderflow),
                 }
 
             },
@@ -206,10 +126,10 @@ impl Instruction {
                         Boolean(b) => Ok(if b { Next } else { RelJump(2) }),
                         _ => {
                             p.stack.push(v);
-                            Err("not a boolean")
+                            Err(TypeError)
                         }
                     },
-                    None => Err("stack empty")
+                    None => Err(StackUnderflow),
                 }
 
             },
@@ -220,10 +140,58 @@ impl Instruction {
     }
 }
 
-fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<IsnSegue, &'static str> {
+fn helper_intbyte_op(p: &mut Process, byte_exp: &Fn(u8, u8) -> u8, int_exp: &Fn(i64, i64) -> i64) -> Result<IsnSegue, ExecError> {
 
     use process::heap::HeapValue::*;
     use self::IsnSegue::*;
+    use self::ExecError::*;
+
+    let a = p.stack.pop();
+    let b = p.stack.pop();
+
+    match (a, b) {
+        (Some(x), Some(y)) => {
+
+            match (x, y) {
+
+                (Integer(x), Integer(y)) => {
+                    p.stack.push(Integer(int_exp(x, y)));
+                    Ok(Next)
+                },
+
+                (Integer(x), Byte(y)) => {
+                    p.stack.push(Integer(int_exp(x, y as i64)));
+                    Ok(Next)
+                },
+
+                (Byte(x), Integer(y)) => {
+                    p.stack.push(Integer(int_exp(x as i64, y)));
+                    Ok(Next)
+                },
+
+                (Byte(x), Byte(y)) => {
+                    p.stack.push(Byte(byte_exp(x, y)));
+                    Ok(Next)
+                },
+
+                _ => Err(TypeError),
+            }
+
+        },
+        (Some(x), None) => {
+            p.stack.push(x);
+            Err(StackUnderflow)
+        },
+        _ => Err(StackUnderflow)
+    }
+
+}
+
+fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<IsnSegue, ExecError> {
+
+    use process::heap::HeapValue::*;
+    use self::IsnSegue::*;
+    use self::ExecError::*;
 
     let a = p.stack.pop();
     let b = p.stack.pop();
@@ -238,65 +206,77 @@ fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<Is
                     Ok(Next)
                 },
 
-                _ => Err("incompatible stack item types")
+                _ => Err(TypeError),
 
             }
 
         },
         (Some(x), None) => {
             p.stack.push(x);
-            Err("stack empty")
+            Err(StackUnderflow)
         },
-        _ => Err("stack empty")
+        _ => Err(StackUnderflow),
     }
 
 }
 
-pub fn vm_exec(p: &mut Process, isns: u64) -> Result<u64, (u64, &str)> {
+#[allow(dead_code)]
+fn fizzbuzz(x: i32) -> String {
+    match (x % 3, x % 5) {
+        (0, 0) => "fizzbuzz".into(),
+        (0, _) => "fizz".into(),
+        (_, 0) => "buzz".into(),
+        _ => format!("{}", x),
+    }
+}
 
-    // FIXME Ugly nested matches can be made into a more functional thing.
+pub enum VmExecError {
+    IsnError(ExecError),
+    ProcessExited,
+}
+
+pub fn vm_exec(p: &mut Process, isns: u64) -> Result<u64, (u64, VmExecError)> {
+
+    use self::VmExecError::*;
 
     let mut execed = 0;
 
     while execed < isns {
 
-        match p.call_stack.pop() {
-            Some(frame) => {
-                let mut f = frame.clone();
-                match f.get_target_isn() {
-                    Some(i) => match i.execute(p) {
-                        Ok(segue) => {
-                            match segue {
-                                IsnSegue::Next => {
-                                    f.next_isn += 1;
-                                    p.call_stack.push(f);
-                                    execed += 1;
-                                },
-                                IsnSegue::RelJump(diff) => {
-                                    f.next_isn = ((f.next_isn as i64) + (diff as i64)) as u64;
-                                    p.call_stack.push(f);
-                                    execed += 1;
-                                },
-                                IsnSegue::Return => execed += 1, // Don't push it back onto the stack.
-                                IsnSegue::Detach => {
-                                    f.next_isn += 1;
-                                    p.call_stack.push(f);
-                                    return Ok(execed + 1);
-                                }
-                            }
-                        },
-                        Err(r) => return Err((execed + 1, r))
+        let frame = match p.call_stack.top() {
+            Some(frame) => frame,
+            None => return Err((execed, ProcessExited)),
+        };
+
+        let ii = frame.get_target_isn();
+        match ii.execute(p) {
+            Ok(segue) => {
+                execed += 1;
+                match segue {
+                    IsnSegue::Next => {
+                        let mut sf = p.call_stack.pop().unwrap();
+                        sf.next_isn += 1;
+                        p.call_stack.push(sf);
                     },
-                    None => {} // Don't push it back onto the stack and don't increment execed.
+                    IsnSegue::RelJump(diff) => {
+                        let mut sf = p.call_stack.pop().unwrap();
+                        sf.next_isn = ((sf.next_isn as i64) + (diff as i64)) as u64;
+                        p.call_stack.push(sf)
+                    },
+                    IsnSegue::Return => {
+                        p.call_stack.pop();
+                    },
+                    IsnSegue::Detach => {
+                        let mut sf = p.call_stack.pop().unwrap();
+                        sf.next_isn += 1;
+                        p.call_stack.push(sf);
+                        return Ok(execed + 1);
+                    }
                 }
             },
-            None => return Err((execed, "process exited"))
+            Err(r) => return Err((execed + 1, IsnError(r))),
         }
-
-        execed += 1;
-
     }
 
     return Ok(execed);
-
 }
