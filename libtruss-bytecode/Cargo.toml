@@ -1,0 +1,7 @@
+[package]
+name = "libtruss-bytecode"
+version = "0.1.0"
+authors = ["treyzania <treyzania@gmail.com>"]
+
+[dependencies]
+libtruss-vm = { path = "../libtruss-vm" }

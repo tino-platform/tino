@@ -2,3 +2,10 @@
 name = "libtruss-vm"
 version = "0.1.0"
 
+[[package]]
+name = "libtruss-bytecode"
+version = "0.1.0"
+dependencies = [
+ "libtruss-vm 0.1.0",
+]
+
