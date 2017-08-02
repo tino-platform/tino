@@ -23,23 +23,17 @@ tokens.
 The magic number is `TRUSSBIN`, which can fit in a 64-bit word.  If you don't
 have 64-bit words on your platform then get a better computer.
 
-If there is some identifier written in like `<t>` or `{t}`, it means that:
-
-* `foo<t>` : T is defined in Foo.
-
-* `bar{t}` : T is used in Bar.  (In this case, bar is repeated T times.)
-
 ```
 
 <U8> : an 8-bit unsigned number
 
-<U32> : a 32-bit unsigned number
+<U32> : a big-endian 32-bit unsigned number
 
-<U64> : a 64-bit unsigned number
+<U64> : a big-endian 64-bit unsigned number
 
-<Identifier> : [a-zA-Z_$][a-zA-Z0-9_$]*
+<Identifier> : [a-zA-Z_$][a-zA-Z0-9_$]* (ascii)
 
-<Symbol> : [a-z]+
+<Symbol> : [a-z]+ (ascii)
 
 <truss> ::= 'TRUSSBIN' <Identifier (blob name)> <U32 (entry count)> <trussEntry>{entry count}
 
