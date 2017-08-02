@@ -8,6 +8,13 @@ pub struct ClassId {
     generic_names: Vec<String>
 }
 
+#[derive(Clone)]
+pub struct FuncId {
+    func_module: String,
+    class_name: Option<ClassId>,
+    name: String
+}
+
 pub struct ClassDef {
     id: ClassId,
     members: Vec<FieldType>,
@@ -15,7 +22,7 @@ pub struct ClassDef {
 }
 
 enum TypeReference {
-    Specific(ClassId, Vec<Box<TypeReference>>),
+    Specific(ClassId, Box<Vec<TypeReference>>),
     Generic(String)
 }
 
@@ -27,6 +34,7 @@ enum FieldType {
 }
 
 pub struct FunctionDef {
-    generic_names: Vec<String>,
-    opcode: Vec<OpCode> // TODO Figure out how these work.
+    id: FuncId,
+    generic_binds: Vec<String>,
+    ops: Vec<OpCode> // TODO Figure out how these work.
 }
