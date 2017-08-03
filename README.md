@@ -47,6 +47,8 @@ but it's a goal in the future.
 
 - [ ] Bytecode loader
 
+- [ ] Streaming opcode support
+
 - [ ] Immutable shared memory
 
 - [ ] Native function execution (NIFs)
@@ -65,3 +67,6 @@ but it's a goal in the future.
 
 - [ ] VisualVM but for TRUSS
 
+- [ ] WebSocket-based server to serve code execution requests in light clients
+
+- [ ] Broswer extension to support aforementioned server
