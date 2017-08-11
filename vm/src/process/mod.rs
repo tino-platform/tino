@@ -3,7 +3,8 @@ use std::cell::Cell;
 pub mod heap;
 
 use classload::ClassPool;
-use process::heap::{HeapObject, StackValue};
+use process::heap::HeapObject;
+use vm::isn::StackValue;
 use vm::func::CallStack;
 
 #[allow(dead_code)]

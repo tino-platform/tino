@@ -44,13 +44,13 @@ impl HeapObject {
 }
 
 #[allow(non_camel_case_types)]
-type hindex = u64; // Used for indexing objects in heap vectors.
+pub type HeapIndex = usize; // Used for indexing objects in heap vectors.
 
 // TODO All of these are much wider than they actually need to be.
 #[derive(Copy, Clone)]
 pub enum HeapValue {
-    Object(hindex),
-    Dynamic(hindex),
+    Object(HeapIndex),
+    Dynamic(HeapIndex),
     Integer(i64),
     Byte(u8),
     Boolean(bool),
@@ -62,5 +62,3 @@ pub enum HeapEntry {
     Dynamic(Vec<u8>),
     Empty
 }
-
-pub type StackValue = HeapValue; // TODO Figure this out.

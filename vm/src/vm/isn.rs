@@ -1,9 +1,26 @@
+use std::rc::Rc;
+
 use process::Process;
+use process::heap::HeapIndex;
+
+use obj::VmClass;
 
 #[derive(Copy, Clone)]
+pub enum StackValue {
+    Object(HeapIndex),
+    Dynamic(HeapIndex),
+    Integer(i64),
+    Byte(u8),
+    Boolean(bool)
+}
+
+#[derive(Clone)]
 pub enum Instruction {
     Nop,
-    //PushLiteral(StackValue),
+    PushLitInteger(i64),
+    PushLitByte(u8),
+    PushLitBoolean(bool),
+    PushNewObject(Rc<VmClass>),
     Pop,
     Dup,
     Xchg,
@@ -28,6 +45,7 @@ pub enum IsnSegue {
 
 #[derive(Clone, Debug)]
 pub enum ExecError {
+    NotImplementedYet,
     StackUnderflow,
     TypeError,
 }
@@ -35,7 +53,7 @@ pub enum ExecError {
 impl Instruction {
     fn execute(&self, p: &mut Process) -> Result<IsnSegue, ExecError> {
 
-        use process::heap::HeapValue::*;
+        use self::StackValue::*;
         use self::ExecError::*;
         use self::IsnSegue::*;
 
@@ -43,10 +61,25 @@ impl Instruction {
 
             &Instruction::Nop => Ok(Next), // Always succeeds
 
-            /*&Instruction::PushLiteral(v) => {
-                p.stack.push(v);
+            &Instruction::PushLitInteger(v) => {
+                p.stack.push(Integer(v));
                 Ok(Next)
-            },*/
+            },
+
+            &Instruction::PushLitByte(v) => {
+                p.stack.push(Byte(v));
+                Ok(Next)
+            },
+
+            &Instruction::PushLitBoolean(v) => {
+                p.stack.push(Boolean(v));
+                Ok(Next)
+            },
+
+            &Instruction::PushNewObject(ref class) => {
+                // TODO Make the object and push it on the stack.
+                Err(NotImplementedYet)
+            }
 
             &Instruction::Pop => match p.stack.pop() {
                 Some(_) => Ok(Next),
@@ -57,7 +90,7 @@ impl Instruction {
 
                 let top = match p.stack.len() {
                     0 => None,
-                    n => Some(p.stack[n - 1])
+                    n => Some(p.stack[n - 1]),
                 };
 
                 match top {
@@ -142,7 +175,7 @@ impl Instruction {
 
 fn helper_intbyte_op(p: &mut Process, byte_exp: &Fn(u8, u8) -> u8, int_exp: &Fn(i64, i64) -> i64) -> Result<IsnSegue, ExecError> {
 
-    use process::heap::HeapValue::*;
+    use self::StackValue::*;
     use self::IsnSegue::*;
     use self::ExecError::*;
 
@@ -189,7 +222,7 @@ fn helper_intbyte_op(p: &mut Process, byte_exp: &Fn(u8, u8) -> u8, int_exp: &Fn(
 
 fn helper_boolean_op(p: &mut Process, exp: &Fn(bool, bool) -> bool) -> Result<IsnSegue, ExecError> {
 
-    use process::heap::HeapValue::*;
+    use self::StackValue::*;
     use self::IsnSegue::*;
     use self::ExecError::*;
 
