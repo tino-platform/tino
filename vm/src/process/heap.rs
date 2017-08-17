@@ -2,10 +2,32 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use obj::VmClass;
+use vm::func::VmFunction;
 
+#[derive(Clone)]
 pub struct HeapObject {
-    obj_type: Rc<VmClass>,
+    vtable: VTable, // Should this be a reference?  What if we want to do composition?
     fields: Vec<Cell<HeapValue>>
+}
+
+#[derive(Clone)]
+struct VTable {
+    class: Rc<VmClass>,
+    funcs: Vec<Rc<VmFunction>>
+}
+
+impl VTable {
+
+    fn from_class(clazz: Rc<VmClass>) -> VTable {
+
+        let mut funcs = vec![];
+
+        // TODO Get the functions from the class.
+
+        VTable { class: clazz, funcs: funcs }
+
+    }
+
 }
 
 impl HeapObject {
@@ -14,15 +36,20 @@ impl HeapObject {
 
         let cnt = clazz.get_ancestor_fields().len();
         HeapObject {
-            obj_type: clazz,
+            vtable: VTable::from_class(clazz),
             fields: vec![Cell::new(HeapValue::Empty); cnt]
         }
 
     }
 
+    pub fn get_class(&self) -> Rc<VmClass> {
+        self.vtable.class.clone()
+    }
+
     pub fn get_field(&self, name: String) -> Option<HeapValue> {
 
-        let fields = self.obj_type.get_ancestor_fields();
+        let clazz = self.get_class();
+        let fields = clazz.get_ancestor_fields().clone();
         for i in 0..fields.len() {
             if fields[i].name == name {
                 return self.get_field_index(i)
@@ -39,6 +66,10 @@ impl HeapObject {
         } else {
             None
         }
+    }
+
+    pub fn get_function_index(&self, idx: usize) -> Rc<VmFunction> {
+        self.vtable.funcs[idx].clone()
     }
 
 }

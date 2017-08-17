@@ -1,7 +1,10 @@
 use std::rc::Rc;
 
+use vm::func::VmFunction;
+use vm::func::StackFrame;
+
 use process::Process;
-use process::heap::HeapIndex;
+use process::heap::{HeapIndex, HeapObject};
 
 use obj::VmClass;
 
@@ -32,6 +35,8 @@ pub enum Instruction {
     LogicalNot,
     RelativeJump(isize),
     CondExec,
+    InvokeStd(Rc<VmFunction>),
+    InvokeVirtual(Rc<VmClass>, usize),
     Return,
     Detach
 }
@@ -77,8 +82,16 @@ impl Instruction {
             },
 
             &Instruction::PushNewObject(ref class) => {
-                // TODO Make the object and push it on the stack.
-                Err(NotImplementedYet)
+
+                let mut created = HeapObject::new(class.clone());
+
+                // TODO Install all the fields, as necessary.
+
+                let idx = unimplemented!(); // TODO Add the object to the heap and get a reference.
+
+                p.stack.push(Object(idx));
+                Ok(Next)
+
             }
 
             &Instruction::Pop => match p.stack.pop() {
@@ -148,6 +161,50 @@ impl Instruction {
             },
 
             &Instruction::RelativeJump(d) => Ok(RelJump(d)),
+
+            &Instruction::InvokeStd(ref func) => {
+
+                match p.call_stack.top() {
+                    Some(mut e) => {
+                        e.next_isn += 1;
+                        p.call_stack.push(e);
+                    },
+                    None => {}
+                };
+
+                p.call_stack.push(StackFrame::new(func.clone()));
+                Ok(Next)
+
+            },
+
+            &Instruction::InvokeVirtual(ref class, usize) => {
+
+                match p.call_stack.top() {
+                    Some(mut e) => {
+                        e.next_isn += 1; // Are we doing this right?
+                        p.call_stack.push(e);
+                    },
+                    None => {}
+                };
+
+                let top = p.stack.pop();
+
+                match top {
+                    Some(v) => match v {
+                        Object(_) => {
+                            // TODO Call the function.
+                            Ok(Next)
+                        },
+                        _ => {
+                            p.stack.push(v);
+                            Err(TypeError)
+                        }
+                    },
+                    None => Err(StackUnderflow)
+                }
+
+            }
+
             &Instruction::Return => Ok(Return),
 
             &Instruction::CondExec => {

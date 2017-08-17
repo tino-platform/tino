@@ -6,7 +6,6 @@ use vm::isn::Instruction;
 #[derive(Clone)]
 pub struct VmFunction {
     name: String,
-    clazz: Option<ClassIdentifier>, // Do we want this?
     pub isns: Vec<Instruction>,
     flags: u64,
 }
@@ -18,6 +17,11 @@ pub struct StackFrame {
 }
 
 impl StackFrame {
+
+    pub fn new(func: Rc<VmFunction>) -> StackFrame {
+        StackFrame { func: func, next_isn: 0 }
+    }
+
     pub fn get_target_isn(&self) -> Instruction {
         self.func.isns
             .get(self.next_isn as usize)

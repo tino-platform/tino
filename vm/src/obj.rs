@@ -3,6 +3,8 @@ use std::rc::Rc;
 
 use classload::ClassIdentifier;
 
+use vm::func::VmFunction;
+
 #[derive(Clone)]
 pub enum VmType {
     Object(Rc<VmClass>),
@@ -36,7 +38,8 @@ pub struct VmClass {
     name: String,
     package: String,
     parent: Option<Rc<VmClass>>,
-    local_fields: Vec<VmFieldDef>
+    local_fields: Vec<VmFieldDef>,
+    functions: Vec<Rc<VmFunction>>
 }
 
 impl VmClass {
@@ -46,7 +49,8 @@ impl VmClass {
             name: id.name.clone(),
             package: id.package.clone(),
             parent: None,
-            local_fields: vec![]
+            local_fields: vec![],
+            functions: vec![]
         }
     }
 
