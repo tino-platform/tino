@@ -1,5 +1,7 @@
 # Truss Bytecode Specification
 
+# Warning: This is all outdated now.  See `src/capnp/` for more information.
+
 Well shit, this is going to be hard.  It wouldn't be so hard if we didn't want
 to support generic types, but we do because we're not Go.
 

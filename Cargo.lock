@@ -3,9 +3,35 @@ name = "libtruss-vm"
 version = "0.1.0"
 
 [[package]]
+name = "byteorder"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "capnp"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "capnpc"
+version = "0.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "capnp 0.8.11 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "libtruss-bytecode"
 version = "0.1.0"
 dependencies = [
+ "capnpc 0.8.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "libtruss-vm 0.1.0",
 ]
 
+[metadata]
+"checksum byteorder 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff81738b726f5d099632ceaffe7fb65b90212e8dce59d518729e7e8634032d3d"
+"checksum capnp 0.8.11 (registry+https://github.com/rust-lang/crates.io-index)" = "6c49efbd14259f397f9b8738f0485ffb53b44ae711a7ce9fdfe73f3cb5d470e1"
+"checksum capnpc 0.8.7 (registry+https://github.com/rust-lang/crates.io-index)" = "5eb630656e23f1316d88bad8be37047ba9c6fc89c3e9dbe060c1a91b229918e2"

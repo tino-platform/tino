@@ -2,6 +2,10 @@
 name = "libtruss-bytecode"
 version = "0.1.0"
 authors = ["treyzania <treyzania@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+capnpc = "0.8"
 
 [dependencies]
 libtruss-vm = { path = "../vm" }
