@@ -1,4 +1,4 @@
-@0x9aa93c8d50ce403d
+@0xe9ae95396aaf49f4;
 
 # Trussfile specification for TRUSS binaries.
 #
@@ -12,20 +12,18 @@
 
 struct Trussfile {
 
- 	component_name @0 :Text;
-	vendor_id @1 :Text
-	entries @1 :List(ComponentEntry)
+ 	componentName @0 :Text;
+	vendorId @1 :Text;
+	entries @2 :List(ComponentEntry);
 
 }
 
 struct ComponentEntry {
 	name @0 :Text;
-	union entry {
-		comment @1 :group {
-			content @1 :Text;
-		}
-		classdef @2 :ClassDef
-		methodef @3 :MethodDef
+	body :union {
+		comment @1 :Text;
+		classdef @2 :ClassDef;
+		methodef @3 :MethodDef;
 	}
 }
 
@@ -35,9 +33,9 @@ struct ClassDef {
 }
 
 struct MethodDef {
-	union package {
-		none @1;
-		memberof @2 :Text;
+	package :union {
+		none @0 :Void;
+		memberof @1 :Text;
 	}
 	# TODO
 }
